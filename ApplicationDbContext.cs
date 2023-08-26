@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using WebApiAutores.entities;
+using WebApiAutores.Entities;
 
 namespace WebApiAutores;
 
