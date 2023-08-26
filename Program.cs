@@ -1,6 +1,10 @@
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using WebApiAutores;
+using WebApiAutores.Filtros;
+using WebApiAutores.Middlewares;
+using WebApiAutores.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,16 +17,26 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer("name=DefaultConnection"));
 
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer();
+
 var app = builder.Build();
+
+app.UseLoguearRespuestaHTTP();
+
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-  app.UseSwagger();
-  app.UseSwaggerUI();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();
+
+app.UseRouting();
+
+app.UseResponseCaching();
 
 app.UseAuthorization();
 
