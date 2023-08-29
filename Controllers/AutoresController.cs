@@ -1,8 +1,9 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApiAutores.Entities;
-using WebApiAutores.Filtros;
+using WebApiAutores.Models;
 
 namespace WebApiAutores.Controllers;
 
@@ -12,22 +13,24 @@ public class AutoresController : ControllerBase
 {
   private readonly ApplicationDbContext _context;
   private readonly ILogger<AutoresController> _logger;
+  private readonly IMapper _mapper;
 
-  public AutoresController(ApplicationDbContext context, ILogger<AutoresController> logger)
+  public AutoresController(ApplicationDbContext context, ILogger<AutoresController> logger,
+      IMapper mapper)
   {
     _context = context;
     _logger = logger;
+    _mapper = mapper;
   }
 
   [HttpGet]
-  //[ResponseCache(Duration = 20)]
-  [ServiceFilter(typeof(MiFiltroDeAccion))]
   public async Task<IActionResult> Get()
   {
     _logger.LogInformation("Obteniendo los autores");
 
     var listaAutores = await _context.Autores
-            .ToListAsync();
+        .ProjectTo<AutorDTO>(_mapper.ConfigurationProvider)
+        .ToListAsync();
 
     return Ok(listaAutores);
   }
@@ -36,39 +39,40 @@ public class AutoresController : ControllerBase
   public async Task<IActionResult> Get(int id)
   {
     var autor = await _context.Autores
-            .FirstOrDefaultAsync(x => x.Id == id);
+        .FirstOrDefaultAsync(x => x.Id == id);
 
     if (autor is null)
     {
       return NotFound();
     }
 
-    return Ok(autor);
+    var autorDTO = _mapper.Map<AutorDTO>(autor);
+
+    return Ok(autorDTO);
   }
 
   [HttpGet("{nombre}")]
   public async Task<IActionResult> Get([FromRoute] string nombre)
   {
-    var autor = await _context.Autores
-            .FirstOrDefaultAsync(x => x.Nombre.Contains(nombre));
+    var autores = await _context.Autores
+        .Where(x => x.Nombre.Contains(nombre))
+        .ProjectTo<AutorDTO>(_mapper.ConfigurationProvider)
+        .ToListAsync();
 
-    if (autor is null)
-    {
-      return NotFound();
-    }
-
-    return Ok(autor);
+    return Ok(autores);
   }
 
   [HttpPost]
-  public async Task<IActionResult> Post([FromBody] Autor autor)
+  public async Task<IActionResult> Post([FromBody] AutorCreacionDTO model)
   {
-    var existeAutorConElMismoNombre = await _context.Autores.AnyAsync(x => x.Nombre == autor.Nombre);
+    var existeAutorConElMismoNombre = await _context.Autores.AnyAsync(x => x.Nombre == model.Nombre);
 
     if (existeAutorConElMismoNombre)
     {
-      return BadRequest($"Ya existe un autor con el nombre {autor.Nombre}");
+      return BadRequest($"Ya existe un autor con el nombre {model.Nombre}");
     }
+
+    var autor = _mapper.Map<Autor>(model);
 
     _context.Add(autor);
     await _context.SaveChangesAsync();
@@ -88,7 +92,7 @@ public class AutoresController : ControllerBase
     await _context.SaveChangesAsync();
 
     return Ok();
-  } 
+  }
 
   [HttpDelete("{id:int}")]
   public async Task<IActionResult> Delete(int id)
