@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace WebApiAutores.Validaciones;
+namespace WebApiAutores.Validations;
 
 public class PrimeraLetraMayusculaAttribute: ValidationAttribute
 {
