@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc.Filters;
 
-namespace WebApiAutores.Filtros;
+namespace WebApiAutores.Filters;
 
 public class MiFiltroDeAccion: IActionFilter
 {
