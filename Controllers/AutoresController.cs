@@ -16,7 +16,7 @@ public class AutoresController : ControllerBase
   private readonly IMapper _mapper;
 
   public AutoresController(ApplicationDbContext context, ILogger<AutoresController> logger,
-      IMapper mapper)
+        IMapper mapper)
   {
     _context = context;
     _logger = logger;
@@ -29,35 +29,37 @@ public class AutoresController : ControllerBase
     _logger.LogInformation("Obteniendo los autores");
 
     var listaAutores = await _context.Autores
-        .ProjectTo<AutorDTO>(_mapper.ConfigurationProvider)
-        .ToListAsync();
+          .ProjectTo<AutorDTO>(_mapper.ConfigurationProvider)
+          .ToListAsync();
 
     return Ok(listaAutores);
   }
 
-  [HttpGet("{id:int}")]
+  [HttpGet("{id:int}", Name = "obtenerAutor")]
   public async Task<IActionResult> Get(int id)
   {
     var autor = await _context.Autores
-        .FirstOrDefaultAsync(x => x.Id == id);
+          .Include(autorDb => autorDb.AutoresLibros)
+          .ThenInclude(libroDb => libroDb.Libro)
+          .FirstOrDefaultAsync(x => x.Id == id);
 
     if (autor is null)
     {
       return NotFound();
     }
 
-    var autorDTO = _mapper.Map<AutorDTO>(autor);
+    var autorDto = _mapper.Map<AutorDTOConLibros>(autor);
 
-    return Ok(autorDTO);
+    return Ok(autorDto);
   }
 
   [HttpGet("{nombre}")]
   public async Task<IActionResult> Get([FromRoute] string nombre)
   {
     var autores = await _context.Autores
-        .Where(x => x.Nombre.Contains(nombre))
-        .ProjectTo<AutorDTO>(_mapper.ConfigurationProvider)
-        .ToListAsync();
+          .Where(x => x.Nombre.Contains(nombre))
+          .ProjectTo<AutorDTO>(_mapper.ConfigurationProvider)
+          .ToListAsync();
 
     return Ok(autores);
   }
@@ -77,7 +79,9 @@ public class AutoresController : ControllerBase
     _context.Add(autor);
     await _context.SaveChangesAsync();
 
-    return Ok();
+    var autorDto = _mapper.Map<AutorDTO>(autor);
+
+    return CreatedAtRoute("obtenerAutor", new { id = autor.Id }, autorDto);
   }
 
   [HttpPut("{id:int}")]
