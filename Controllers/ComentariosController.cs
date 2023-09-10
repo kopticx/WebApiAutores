@@ -31,11 +31,34 @@ public class ComentariosController : ControllerBase
     }
 
     var comentarios = await _context.Comentarios
-        .Where(c => c.LibroId == libroId)
-        .ProjectTo<ComentarioDTO>(_mapper.ConfigurationProvider)
-        .ToListAsync();
+          .Where(c => c.LibroId == libroId)
+          .ProjectTo<ComentarioDTO>(_mapper.ConfigurationProvider)
+          .ToListAsync();
 
     return Ok(comentarios);
+  }
+
+  [HttpGet("{id:int}", Name = "obtenerComentario")]
+  public async Task<IActionResult> GetById(int libroId, int id)
+  {
+    var existeLibro = await _context.Libros.AnyAsync(l => l.Id == libroId);
+
+    if (!existeLibro)
+    {
+      return NotFound();
+    }
+
+    var comentario = await _context.Comentarios
+          .FirstOrDefaultAsync(c => c.Id == id);
+
+    if (comentario is null)
+    {
+      return NotFound();
+    }
+
+    var comentarioDto = _mapper.Map<ComentarioDTO>(comentario);
+
+    return Ok(comentarioDto);
   }
 
   [HttpPost]
@@ -54,6 +77,8 @@ public class ComentariosController : ControllerBase
     _context.Add(comentario);
     await _context.SaveChangesAsync();
 
-    return Ok();
+    var comentarioDto = _mapper.Map<ComentarioDTO>(comentario);
+
+    return CreatedAtRoute("obtenerComentario", new { id = comentario.Id, libroId = comentario.LibroId }, comentarioDto);
   }
 }

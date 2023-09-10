@@ -19,10 +19,12 @@ public class LibrosController : ControllerBase
     _mapper = mapper;
   }
 
-  [HttpGet("{id:int}")]
+  [HttpGet("{id:int}", Name = "obtenerLibro")]
   public async Task<IActionResult> Get(int id)
   {
     var libro = await _context.Libros
+          .Include(libro => libro.AutoresLibros)
+          .ThenInclude(autorLibro => autorLibro.Autor)
           .Include(c => c.Comentarios)
           .FirstOrDefaultAsync(x => x.Id == id);
 
@@ -31,26 +33,46 @@ public class LibrosController : ControllerBase
       return NotFound();
     }
 
-    var libroDTO = _mapper.Map<LibroDTO>(libro);
+    libro.AutoresLibros = libro.AutoresLibros.OrderBy(x => x.Orden).ToList();
 
-    return Ok(libroDTO);
+    var libroDto = _mapper.Map<LibroDTOConAutores>(libro);
+
+    return Ok(libroDto);
   }
 
   [HttpPost]
   public async Task<IActionResult> Post(LibroCreacionDTO model)
   {
-    // var existeAutor = await _context.Autores.AnyAsync(x => x.Id == libroDTO);
-    //
-    // if (!existeAutor)
-    // {
-    //   return BadRequest($"No existe el autor con el Id {libroDTO.AutorId}");
-    // }
+    if (model.AutoresIds is null)
+    {
+      return BadRequest("No se puede crear un libro sin autores");
+    }
+
+    var autoresIds = await _context.Autores
+          .Where(x =>  model.AutoresIds.Contains(x.Id))
+          .Select(x => x.Id)
+          .ToListAsync();
+
+    if (model.AutoresIds.Count() != autoresIds.Count())
+    {
+      return BadRequest("No existe uno o más autores enviados");
+    }
 
     var libro = _mapper.Map<Libro>(model);
+
+    if(libro.AutoresLibros is not null)
+    {
+      for (int i = 0; i < libro.AutoresLibros.Count; i++)
+      {
+        libro.AutoresLibros[i].Orden = i;
+      }
+    }
 
     _context.Add(libro);
     await _context.SaveChangesAsync();
 
-    return Ok("Libro creado exitosamente");
+    var libroDto = _mapper.Map<LibroDTO>(libro);
+
+    return CreatedAtRoute("obtenerLibro", new { id = libro.Id }, libroDto);
   }
 }
