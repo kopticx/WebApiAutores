@@ -85,17 +85,22 @@ public class AutoresController : ControllerBase
   }
 
   [HttpPut("{id:int}")]
-  public async Task<IActionResult> Put(Autor autor, int id)
+  public async Task<IActionResult> Put(AutorCreacionDTO model, int id)
   {
-    if (autor.Id != id)
+    var existe = await _context.Autores.AnyAsync(x => x.Id == id);
+
+    if (!existe)
     {
-      return BadRequest("El id del autor no coincide con el id de la URL");
+      return NotFound();
     }
+
+    var autor = _mapper.Map<Autor>(model);
+    autor.Id = id;
 
     _context.Update(autor);
     await _context.SaveChangesAsync();
 
-    return Ok();
+    return NoContent();
   }
 
   [HttpDelete("{id:int}")]
@@ -111,6 +116,6 @@ public class AutoresController : ControllerBase
     _context.Remove(autor);
     await _context.SaveChangesAsync();
 
-    return Ok();
+    return NoContent();
   }
 }

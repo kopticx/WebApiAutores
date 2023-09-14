@@ -3,7 +3,7 @@ using WebApiAutores.Validations;
 
 namespace WebApiAutores.Models;
 
-public class LibroCreacionDTO
+public class LibroPatchDTO
 {
   [PrimeraLetraMayuscula]
   [StringLength(maximumLength: 250)]

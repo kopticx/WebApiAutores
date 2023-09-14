@@ -81,4 +81,31 @@ public class ComentariosController : ControllerBase
 
     return CreatedAtRoute("obtenerComentario", new { id = comentario.Id, libroId = comentario.LibroId }, comentarioDto);
   }
+
+  [HttpPut("{id:int}")]
+  public async Task<IActionResult> Put(int libroId, int id, ComentarioCreacionDTO model)
+  {
+    var existeLibro = await _context.Libros.AnyAsync(l => l.Id == libroId);
+
+    if (!existeLibro)
+    {
+      return NotFound();
+    }
+
+    var existeComentario = await _context.Comentarios.AnyAsync(c => c.Id == id);
+
+    if (!existeComentario)
+    {
+      return NotFound();
+    }
+
+    var comentario = _mapper.Map<Comentario>(model);
+    comentario.Id = id;
+    comentario.LibroId = libroId;
+
+    _context.Update(comentario);
+    await _context.SaveChangesAsync();
+
+    return NoContent();
+  }
 }
