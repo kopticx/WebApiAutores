@@ -1,5 +1,7 @@
 ﻿using AutoMapper;
 using AutoMapper.QueryableExtensions;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApiAutores.Entities;
@@ -9,6 +11,7 @@ namespace WebApiAutores.Controllers;
 
 [ApiController]
 [Route("api/autores")]
+[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = "EsAdmin")]
 public class AutoresController : ControllerBase
 {
   private readonly ApplicationDbContext _context;
@@ -16,7 +19,7 @@ public class AutoresController : ControllerBase
   private readonly IMapper _mapper;
 
   public AutoresController(ApplicationDbContext context, ILogger<AutoresController> logger,
-        IMapper mapper)
+    IMapper mapper)
   {
     _context = context;
     _logger = logger;
@@ -29,8 +32,8 @@ public class AutoresController : ControllerBase
     _logger.LogInformation("Obteniendo los autores");
 
     var listaAutores = await _context.Autores
-          .ProjectTo<AutorDTO>(_mapper.ConfigurationProvider)
-          .ToListAsync();
+      .ProjectTo<AutorDTO>(_mapper.ConfigurationProvider)
+      .ToListAsync();
 
     return Ok(listaAutores);
   }
@@ -39,9 +42,9 @@ public class AutoresController : ControllerBase
   public async Task<IActionResult> Get(int id)
   {
     var autor = await _context.Autores
-          .Include(autorDb => autorDb.AutoresLibros)
-          .ThenInclude(libroDb => libroDb.Libro)
-          .FirstOrDefaultAsync(x => x.Id == id);
+      .Include(autorDb => autorDb.AutoresLibros)
+      .ThenInclude(libroDb => libroDb.Libro)
+      .FirstOrDefaultAsync(x => x.Id == id);
 
     if (autor is null)
     {
@@ -57,9 +60,9 @@ public class AutoresController : ControllerBase
   public async Task<IActionResult> Get([FromRoute] string nombre)
   {
     var autores = await _context.Autores
-          .Where(x => x.Nombre.Contains(nombre))
-          .ProjectTo<AutorDTO>(_mapper.ConfigurationProvider)
-          .ToListAsync();
+      .Where(x => x.Nombre.Contains(nombre))
+      .ProjectTo<AutorDTO>(_mapper.ConfigurationProvider)
+      .ToListAsync();
 
     return Ok(autores);
   }
