@@ -1,5 +1,9 @@
-﻿using AutoMapper;
+﻿using System.Security.Claims;
+using AutoMapper;
 using AutoMapper.QueryableExtensions;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApiAutores.Entities;
@@ -13,11 +17,14 @@ public class ComentariosController : ControllerBase
 {
   private readonly ApplicationDbContext _context;
   private readonly IMapper _mapper;
+  private readonly UserManager<IdentityUser> _userManager;
 
-  public ComentariosController(ApplicationDbContext context, IMapper mapper)
+  public ComentariosController(ApplicationDbContext context, IMapper mapper,
+    UserManager<IdentityUser> userManager)
   {
     _context = context;
     _mapper = mapper;
+    _userManager = userManager;
   }
 
   [HttpGet]
@@ -31,9 +38,9 @@ public class ComentariosController : ControllerBase
     }
 
     var comentarios = await _context.Comentarios
-          .Where(c => c.LibroId == libroId)
-          .ProjectTo<ComentarioDTO>(_mapper.ConfigurationProvider)
-          .ToListAsync();
+      .Where(c => c.LibroId == libroId)
+      .ProjectTo<ComentarioDTO>(_mapper.ConfigurationProvider)
+      .ToListAsync();
 
     return Ok(comentarios);
   }
@@ -49,7 +56,7 @@ public class ComentariosController : ControllerBase
     }
 
     var comentario = await _context.Comentarios
-          .FirstOrDefaultAsync(c => c.Id == id);
+      .FirstOrDefaultAsync(c => c.Id == id);
 
     if (comentario is null)
     {
@@ -62,8 +69,14 @@ public class ComentariosController : ControllerBase
   }
 
   [HttpPost]
+  [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
   public async Task<IActionResult> Post(int libroId, ComentarioCreacionDTO model)
   {
+    var emailClaim = User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Email);
+    var email = emailClaim.Value;
+
+    var usuario = await _userManager.FindByEmailAsync(email);
+
     var existeLibro = await _context.Libros.AnyAsync(l => l.Id == libroId);
 
     if (!existeLibro)
@@ -73,6 +86,7 @@ public class ComentariosController : ControllerBase
 
     var comentario = _mapper.Map<Comentario>(model);
     comentario.LibroId = libroId;
+    comentario.UsuarioId = usuario.Id;
 
     _context.Add(comentario);
     await _context.SaveChangesAsync();
