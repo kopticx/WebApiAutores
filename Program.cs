@@ -80,7 +80,7 @@ builder.Services.AddCors(opciones =>
 {
   opciones.AddDefaultPolicy(builder =>
   {
-    builder.WithOrigins("").AllowAnyMethod().AllowAnyHeader().WithExposedHeaders();
+    builder.WithOrigins("").AllowAnyMethod().AllowAnyHeader().WithExposedHeaders("cantidadTotalRegistros");
   });
 });
 

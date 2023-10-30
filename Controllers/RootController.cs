@@ -8,11 +8,9 @@ namespace WebApiAutores.Controllers;
 public class RootController : ControllerBase
 {
   [HttpGet(Name = "ObtenerRoot")]
-  public async Task<IActionResult> ObtenerRoot()
+  public IActionResult ObtenerRoot()
   {
-    var datosHateoas = new List<DatoHATEOAS>();
-
-    datosHateoas.Add(new DatoHATEOAS(enlace: Url.Link("ObtenerRoot", new { }), descripcion: "self", metodo: "GET"));
+    var datosHateoas = new List<DatoHATEOAS> { new (enlace: Url.Link("ObtenerRoot", new { }), descripcion: "self", metodo: "GET") };
 
     return Ok(datosHateoas);
   }

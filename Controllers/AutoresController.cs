@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApiAutores.Entities;
 using WebApiAutores.Models;
+using WebApiAutores.Utilities;
 
 namespace WebApiAutores.Controllers;
 
@@ -15,23 +16,23 @@ namespace WebApiAutores.Controllers;
 public class AutoresController : ControllerBase
 {
   private readonly ApplicationDbContext _context;
-  private readonly ILogger<AutoresController> _logger;
   private readonly IMapper _mapper;
 
-  public AutoresController(ApplicationDbContext context, ILogger<AutoresController> logger,
-    IMapper mapper)
+  public AutoresController(ApplicationDbContext context, IMapper mapper)
   {
     _context = context;
-    _logger = logger;
     _mapper = mapper;
   }
 
   [HttpGet]
-  public async Task<IActionResult> Get()
+  public async Task<IActionResult> Get([FromQuery] PaginacionDTO paginacionDto)
   {
-    _logger.LogInformation("Obteniendo los autores");
+    var queryable = _context.Autores.AsQueryable();
+    await HttpContext.InsertarParametrosPaginacionEnCabecera(queryable);
 
-    var listaAutores = await _context.Autores
+    var listaAutores = await queryable
+      .OrderBy(a => a.Nombre)
+      .Paginar(paginacionDto)
       .ProjectTo<AutorDTO>(_mapper.ConfigurationProvider)
       .ToListAsync();
 

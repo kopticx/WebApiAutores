@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApiAutores.Entities;
 using WebApiAutores.Models;
+using WebApiAutores.Utilities;
 
 namespace WebApiAutores.Controllers;
 
@@ -46,7 +47,7 @@ public class ComentariosController : ControllerBase
   }
 
   [HttpGet("{id:int}", Name = "obtenerComentario")]
-  public async Task<IActionResult> GetById(int libroId, int id)
+  public async Task<IActionResult> GetById(int libroId, int id, [FromQuery] PaginacionDTO paginacionDto)
   {
     var existeLibro = await _context.Libros.AnyAsync(l => l.Id == libroId);
 
@@ -55,12 +56,14 @@ public class ComentariosController : ControllerBase
       return NotFound();
     }
 
-    var comentario = await _context.Comentarios
-      .FirstOrDefaultAsync(c => c.Id == id);
+    var queryable = _context.Comentarios.Where(x => x.LibroId == libroId).AsQueryable();
+    await HttpContext.InsertarParametrosPaginacionEnCabecera(queryable);
 
-    if (comentario is null)
+    var comentario = await queryable.OrderBy(c => c.Id).Paginar(paginacionDto).ToListAsync();
+
+    if (comentario.Count == 0)
     {
-      return NotFound();
+      return NotFound("No se encio");
     }
 
     var comentarioDto = _mapper.Map<ComentarioDTO>(comentario);

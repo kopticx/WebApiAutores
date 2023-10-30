@@ -6,18 +6,13 @@ public class PrimeraLetraMayusculaAttribute: ValidationAttribute
 {
   protected override ValidationResult IsValid(object value, ValidationContext validationContext)
   {
-    if (String.IsNullOrEmpty(value.ToString()))
+    if (string.IsNullOrEmpty(value.ToString()))
     {
       return ValidationResult.Success;
     }
 
     var primeraLetra = value.ToString().First().ToString();
 
-    if(primeraLetra != primeraLetra.ToUpper())
-    {
-      return new ValidationResult("La primera letra debe ser mayúscula");
-    }
-
-    return ValidationResult.Success;
+    return primeraLetra != primeraLetra.ToUpper() ? new ValidationResult("La primera letra debe ser mayúscula") : ValidationResult.Success;
   }
 }
