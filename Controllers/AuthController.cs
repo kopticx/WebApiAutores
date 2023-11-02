@@ -93,7 +93,7 @@ public class AuthController : ControllerBase
     return BadRequest(resultado.Errors);
   }
 
-  [HttpPost("Login")]
+  [HttpPost("Login", Name = "loginUsuario")]
   public async Task<IActionResult> Login(CredencialesUsuarioDTO model)
   {
     var resultado =
@@ -108,7 +108,7 @@ public class AuthController : ControllerBase
     return BadRequest("Login incorrecto");
   }
 
-  [HttpGet("RenovarToken")]
+  [HttpGet("RenovarToken", Name = "renovarTokenUsuario")]
   [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
   public async Task<IActionResult> RenovarToken()
   {
@@ -123,7 +123,7 @@ public class AuthController : ControllerBase
     return Ok(await ConstruirToken(credencialesUsuario));
   }
 
-  [HttpPost("HacerAdmin")]
+  [HttpPost("HacerAdmin", Name = "hacerAdmin")]
   [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = "EsAdmin")]
   public async Task<IActionResult> HacerAdmin(EditarAdminDTO model)
   {
@@ -133,7 +133,7 @@ public class AuthController : ControllerBase
     return NoContent();
   }
 
-  [HttpPost("RemoveAdmin")]
+  [HttpPost("RemoveAdmin", Name = "removeAdmin")]
   [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = "EsAdmin")]
   public async Task<IActionResult> RemoveAdmin(EditarAdminDTO model)
   {
