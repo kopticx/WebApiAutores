@@ -32,53 +32,7 @@ public class AuthController : ControllerBase
     _dataProtector = dataProtectionProvider.CreateProtector("valor_unico_y_quizas_secreto");
   }
 
-  [HttpGet("Encriptar")]
-  public IActionResult Encriptar()
-  {
-    var textoPlano = "Kevin Fernandez";
-    var textoCifrado = _dataProtector.Protect(textoPlano);
-    var textoDesencriptado = _dataProtector.Unprotect(textoCifrado);
-
-    return Ok(new
-    {
-      textoPlano,
-      textoCifrado,
-      textoDesencriptado
-    });
-  }
-
-  [HttpGet("EncriptarPorTiempo")]
-  public IActionResult EncriptarPorTiempo()
-  {
-    var protectorLimitadoPorTiempo = _dataProtector.ToTimeLimitedDataProtector();
-
-    var textoPlano = "Kevin Fernandez";
-    var textoCifrado = protectorLimitadoPorTiempo.Protect(textoPlano, lifetime: TimeSpan.FromSeconds(5));
-    Thread.Sleep(6000);
-    var textoDesencriptado = protectorLimitadoPorTiempo.Unprotect(textoCifrado);
-
-    return Ok(new
-    {
-      textoPlano,
-      textoCifrado,
-      textoDesencriptado
-    });
-  }
-
-  [HttpGet("Hash/{textoPlano}")]
-  public IActionResult Hash(string textoPlano)
-  {
-    var resultado1 = _hashService.Hash(textoPlano);
-    var resultado2 = _hashService.Hash(textoPlano);
-    return Ok(new
-    {
-      textoPlano,
-      Hash1 = resultado1,
-      Hash2 = resultado2
-    });
-  }
-
-  [HttpPost("Registrar")]
+  [HttpPost("Registrar", Name = "registrarUsuario")]
   public async Task<IActionResult> Registrar(CredencialesUsuarioDTO model)
   {
     var usuario = new IdentityUser { UserName = model.UserName, Email = model.Email };
@@ -93,7 +47,7 @@ public class AuthController : ControllerBase
     return BadRequest(resultado.Errors);
   }
 
-  [HttpPost("Login")]
+  [HttpPost("Login", Name = "loginUsuario")]
   public async Task<IActionResult> Login(CredencialesUsuarioDTO model)
   {
     var resultado =
@@ -108,7 +62,7 @@ public class AuthController : ControllerBase
     return BadRequest("Login incorrecto");
   }
 
-  [HttpGet("RenovarToken")]
+  [HttpGet("RenovarToken", Name = "renovarTokenUsuario")]
   [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
   public async Task<IActionResult> RenovarToken()
   {
@@ -123,7 +77,7 @@ public class AuthController : ControllerBase
     return Ok(await ConstruirToken(credencialesUsuario));
   }
 
-  [HttpPost("HacerAdmin")]
+  [HttpPost("HacerAdmin", Name = "hacerAdmin")]
   [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = "EsAdmin")]
   public async Task<IActionResult> HacerAdmin(EditarAdminDTO model)
   {
@@ -133,7 +87,7 @@ public class AuthController : ControllerBase
     return NoContent();
   }
 
-  [HttpPost("RemoveAdmin")]
+  [HttpPost("RemoveAdmin", Name = "removeAdmin")]
   [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = "EsAdmin")]
   public async Task<IActionResult> RemoveAdmin(EditarAdminDTO model)
   {

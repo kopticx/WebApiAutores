@@ -41,7 +41,7 @@ public class LibrosController : ControllerBase
     return Ok(libroDto);
   }
 
-  [HttpPost]
+  [HttpPost(Name = "crearLibro")]
   public async Task<IActionResult> Post(LibroCreacionDTO model)
   {
     if (model.AutoresIds is null)
@@ -71,7 +71,7 @@ public class LibrosController : ControllerBase
     return CreatedAtRoute("obtenerLibro", new { id = libro.Id }, libroDto);
   }
 
-  [HttpPut("{id:int}")]
+  [HttpPut("{id:int}", Name = "actualizarLibro")]
   public async Task<IActionResult> Put(int id, LibroCreacionDTO model)
   {
     var libroDb = await _context.Libros
@@ -92,7 +92,7 @@ public class LibrosController : ControllerBase
     return NoContent();
   }
 
-  [HttpPatch("{id:int}")]
+  [HttpPatch("{id:int}", Name = "patchLibro")]
   public async Task<IActionResult> Patch(int id, JsonPatchDocument<LibroPatchDTO> patchDocument)
   {
     if(patchDocument is null)
@@ -125,7 +125,7 @@ public class LibrosController : ControllerBase
     return NoContent();
   }
 
-  [HttpDelete("{id:int}")]
+  [HttpDelete("{id:int}", Name = "borrarLibro")]
   public async Task<IActionResult> Delete(int id)
   {
     var libro = await _context.Libros.FirstOrDefaultAsync(l => l.Id == id);

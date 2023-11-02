@@ -26,7 +26,7 @@ public class AutoresController : ControllerBase
     _mapper = mapper;
   }
 
-  [HttpGet]
+  [HttpGet(Name = "obtenerAutores")]
   public async Task<IActionResult> Get()
   {
     _logger.LogInformation("Obteniendo los autores");
@@ -56,7 +56,25 @@ public class AutoresController : ControllerBase
     return Ok(autorDto);
   }
 
-  [HttpGet("{nombre}")]
+  private void GenerarEnlaces(AutorDTO autorDTO)
+  {
+    autorDTO.Enlaces.Add(new DatoHATEOAS(
+      enlace: Url.Link("obtenerAutor", new { id = autorDTO.Id }),
+      descripcion: "self",
+      metodo: "GET"));
+
+    autorDTO.Enlaces.Add(new DatoHATEOAS(
+      enlace: Url.Link("actualizarAutor", new { id = autorDTO.Id }),
+      descripcion: "autor-actualizar",
+      metodo: "PUT"));
+
+    autorDTO.Enlaces.Add(new DatoHATEOAS(
+      enlace: Url.Link("borrarAutor", new { id = autorDTO.Id }),
+      descripcion: "autor-borrar",
+      metodo: "DELETE"));
+  }
+
+  [HttpGet("{nombre}", Name = "obtenerAutorPorNombre")]
   public async Task<IActionResult> Get([FromRoute] string nombre)
   {
     var autores = await _context.Autores
@@ -67,7 +85,7 @@ public class AutoresController : ControllerBase
     return Ok(autores);
   }
 
-  [HttpPost]
+  [HttpPost(Name = "crearAutor")]
   public async Task<IActionResult> Post([FromBody] AutorCreacionDTO model)
   {
     var existeAutorConElMismoNombre = await _context.Autores.AnyAsync(x => x.Nombre == model.Nombre);
@@ -87,7 +105,7 @@ public class AutoresController : ControllerBase
     return CreatedAtRoute("obtenerAutor", new { id = autor.Id }, autorDto);
   }
 
-  [HttpPut("{id:int}")]
+  [HttpPut("{id:int}", Name = "actualizarAutor")]
   public async Task<IActionResult> Put(AutorCreacionDTO model, int id)
   {
     var existe = await _context.Autores.AnyAsync(x => x.Id == id);
@@ -106,7 +124,7 @@ public class AutoresController : ControllerBase
     return NoContent();
   }
 
-  [HttpDelete("{id:int}")]
+  [HttpDelete("{id:int}", Name = "borrarAutor")]
   public async Task<IActionResult> Delete(int id)
   {
     var autor = await _context.Autores.FirstOrDefaultAsync(x => x.Id == id);
